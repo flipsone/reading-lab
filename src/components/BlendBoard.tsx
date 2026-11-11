@@ -5,6 +5,7 @@ import Icon from "./Icon";
 
 export default function BlendBoard({
   target,
+  units,
   sounds,
   allowed,
   single,
@@ -12,12 +13,14 @@ export default function BlendBoard({
   onComplete,
 }: {
   target: string;
+  units?: string[];
   sounds: Lesson["sounds"];
   allowed: boolean;
   single?: boolean;
   onHelp: (kind: "parent_model" | "audio" | "blend") => void;
   onComplete: () => void;
 }) {
+  const pieces = units ?? (single ? [target] : [...target]);
   const [active, setActive] = useState(-1);
   const [position, setPosition] = useState(0);
   const [running, setRunning] = useState(false);
@@ -52,18 +55,18 @@ export default function BlendBoard({
     let i = 0;
     timer.current = setInterval(() => {
       i++;
-      if (i >= target.length) {
+      if (i >= pieces.length) {
         stop();
         complete();
       } else {
         setActive(i);
-        setPosition((i / (target.length - 1)) * 100);
+        setPosition((i / (pieces.length - 1)) * 100);
       }
     }, 800);
   };
   const tile = async (index: number) => {
     if (!allowed || running) return;
-    const sound = sounds.find((s) => s.grapheme === target[index])!;
+    const sound = sounds.find((s) => s.grapheme === pieces[index])!;
     setActive(index);
     onHelp(sound.audio ? "audio" : "parent_model");
     const played = await playPhoneme(sound);
@@ -83,7 +86,7 @@ export default function BlendBoard({
     lastPosition.current = pct;
     setPosition(pct);
     setActive(
-      Math.min(target.length - 1, Math.floor((pct / 100) * target.length)),
+      Math.min(pieces.length - 1, Math.floor((pct / 100) * pieces.length)),
     );
     if (pct >= 95) {
       dragging.current = false;
@@ -93,7 +96,7 @@ export default function BlendBoard({
   return (
     <div className="blend-board" dir="ltr">
       <div className={`tiles ${single ? "single" : ""}`}>
-        {[...target].map((letter, i) =>
+        {pieces.map((letter, i) =>
           !allowed ? (
             <div
               key={i}

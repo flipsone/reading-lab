@@ -5,6 +5,7 @@ import {
   type GameRound,
   type Encounter,
 } from "./game-models";
+import { eligibleSchoolWords } from "./school-words";
 import { createId } from "./ids";
 import { shuffle } from "./engine";
 export const FLIGHT_MS = 12000;
@@ -67,6 +68,7 @@ export function openGame(
     s.lesson.exercises
       .filter(
         (e) =>
+          e.phase !== "sound" &&
           gameWordSchema.safeParse(e.target).success &&
           (s.practiceSteps.some(
             (step) => step.exerciseId === e.id && step.action === "practiced",
@@ -77,19 +79,45 @@ export function openGame(
       )
       .map((e) => e.target),
   );
-  const reviews = shuffle(
-    [...new Set(familiar)].filter((w) => !focus.includes(w)),
+  const school = eligibleSchoolWords(progress.schoolWords);
+  const lastUsed = (word: string) =>
+    progress.gameRounds
+      .flatMap((g) =>
+        g.deck
+          .filter((e) => e.target === word && e.resolvedAt)
+          .map((e) => e.resolvedAt!),
+      )
+      .sort()
+      .at(-1) ?? "";
+  const schoolReview = [...school]
+    .filter((w) => !focus.includes(w.word))
+    .sort(
+      (a, b) =>
+        lastUsed(a.word).localeCompare(lastUsed(b.word)) ||
+        a.createdAt.localeCompare(b.createdAt),
+    )
+    .map((w) => w.word);
+  const lessonReview = shuffle(
+    [...new Set(familiar)].filter(
+      (w) => !focus.includes(w) && !schoolReview.includes(w),
+    ),
     random,
   );
+  const reviews = [...schoolReview, ...lessonReview];
   const extras = reviews.length
     ? [reviews[0], reviews[1] ?? reviews[0]]
     : focus;
-  const eligibleWords = [...new Set([...focus, ...familiar])];
+  const eligibleWords = [
+    ...new Set([...focus, ...familiar, ...school.map((w) => w.word)]),
+  ];
   const targets = arrange([...focus, ...focus, ...focus, ...extras], random)!;
   const round = gameRoundSchema.parse({
     id: createId(),
     sessionId,
     version: 1,
+    pack: Math.ceil(session.lesson.mission!.number / 5),
+    schoolEvidence: school,
+    adultPromptWords: school.filter((w) => w.adultPrompt).map((w) => w.word),
     authorization: earned ? "earned" : "parent",
     createdAt: now(),
     completedAt: null,

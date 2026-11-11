@@ -46,8 +46,20 @@ function download(data: string, filename: string) {
   a.click();
   setTimeout(() => URL.revokeObjectURL(url), 1000);
 }
-export default function App() {
+export default function App({
+  playerInitial,
+  playerError,
+  onPlayerSave,
+  onExportAll,
+}: {
+  playerInitial?: Progress;
+  playerError?: string | null;
+  onPlayerSave?: (p: Progress, reset?: boolean) => string | null;
+  onExportAll?: () => void;
+} = {}) {
   const [initial] = useState(() => {
+    if (playerInitial)
+      return { progress: playerInitial, error: playerError ?? null };
     try {
       return loadProgress(localStorage);
     } catch {
@@ -88,9 +100,11 @@ export default function App() {
   const commit = (next: Progress) => {
     live.current = next;
     setProgress(next);
-    if (!protectedData) {
+    if (!protectedData || onPlayerSave) {
       try {
-        setStorageError(saveProgress(localStorage, next));
+        setStorageError(
+          onPlayerSave ? onPlayerSave(next) : saveProgress(localStorage, next),
+        );
       } catch {
         setStorageError(
           "Browser storage is unavailable. Download progress before leaving.",
@@ -209,15 +223,18 @@ export default function App() {
     resetItemState();
   };
   const reset = () => {
-    try {
-      localStorage.removeItem(STORAGE_KEY);
-    } catch {
-      setNotice(
-        "Browser storage could not be cleared. Check your browser settings.",
-      );
+    const fresh = {
+      ...newProgress(),
+      learner: progress.learner,
+      avatar: progress.avatar,
+    };
+    const failure = onPlayerSave
+      ? onPlayerSave(fresh, true)
+      : saveProgress(localStorage, fresh);
+    if (failure) {
+      setNotice(failure);
       return;
     }
-    const fresh = newProgress();
     live.current = fresh;
     setProgress(fresh);
     setStorageError(null);
@@ -225,7 +242,9 @@ export default function App() {
     setView("home");
     setSelectedId(null);
     setConfirmReset(false);
-    setNotice("Local learner progress has been reset.");
+    setNotice(
+      "This player's local progress has been reset. Other players are unchanged.",
+    );
   };
   const showHome = () => {
     setView("home");
@@ -270,6 +289,7 @@ export default function App() {
           setParentOpen(true);
         }}
         onExport={exportProgress}
+        onExportAll={onExportAll}
         onRawExport={() => {
           try {
             download(
@@ -679,7 +699,7 @@ export default function App() {
               <>
                 <h2>Make room for a little practice.</h2>
                 <p>
-                  Sit beside Reader. Ask for the sound, not the letter name.
+                  Sit beside your child. Ask for the sound, not the letter name.
                   Listen first; record his response before offering help.
                 </p>
                 <div className="notice">
@@ -812,7 +832,8 @@ export default function App() {
                         <p>Ask: “What word do those sounds make?”</p>
                         <small>
                           This spoken prompt is the assessment, not extra help.
-                          Hide the script before returning the screen to Reader.
+                          Hide the script before returning the screen to your
+                          child.
                         </small>
                       </div>
                     )}
@@ -822,7 +843,7 @@ export default function App() {
                   <>
                     <p>
                       Turn the screen toward you to read the word, then hide it.
-                      Say the whole word naturally; Reader repeats it and
+                      Say the whole word naturally; your child repeats it and
                       separates its sounds
                       {exercise.phase === "encoding"
                         ? ", then chooses a letter for each sound and reads his spelling back"
@@ -852,12 +873,12 @@ export default function App() {
                       <div className="sound-script">
                         <strong>{exercise.target}</strong>
                         <p>
-                          Say: “{exercise.target}.” Ask Reader to repeat the
+                          Say: “{exercise.target}.” Ask your child to repeat the
                           word.
                         </p>
                         <small>
-                          Hide this word before turning the screen back to
-                          Reader. If he sees the spelling, record that as help.
+                          Hide this word before turning the screen back to your
+                          child. If he sees the spelling, record that as help.
                         </small>
                       </div>
                     )}
@@ -870,7 +891,7 @@ export default function App() {
                         <p>
                           Teach the names Sam and Nan, and explain that sat
                           means sat down. Model each word separately and invite
-                          Reader to blend it. Match S with s and N with n.
+                          your child to blend it. Match S with s and N with n.
                           Explain the capital and period. This prepares familiar
                           words; it is not an unfamiliar-word test.
                         </p>
@@ -883,10 +904,11 @@ export default function App() {
                       </>
                     ) : (
                       <p>
-                        Ask Reader to read the whole sentence. Record his first
-                        reading before modeling or rereading together. Mark any
-                        extra word or sound cue as help. After recording, reread
-                        for natural phrasing; there is no timer or speed target.
+                        Ask your child to read the whole sentence. Record his
+                        first reading before modeling or rereading together.
+                        Mark any extra word or sound cue as help. After
+                        recording, reread for natural phrasing; there is no
+                        timer or speed target.
                       </p>
                     )}
                   </>
@@ -894,15 +916,15 @@ export default function App() {
                 {exercise.phase === "meaning" && exercise.question && (
                   <>
                     <p>
-                      Keep the sentence visible so Reader can look back. Read
-                      the question aloud without giving the answer. A short
+                      Keep the sentence visible so your child can look back.
+                      Read the question aloud without giving the answer. A short
                       answer or a meaningful action is enough.
                     </p>
                     <div className="meaning-question">
                       <strong>Ask: “{exercise.question.prompt}”</strong>
                     </div>
                     <label className="field-label" htmlFor="meaning-mode">
-                      How did Reader access this sentence?
+                      How did your child access this sentence?
                     </label>
                     <select
                       id="meaning-mode"
@@ -916,10 +938,10 @@ export default function App() {
                         value="own_reading"
                         disabled={!canUseOwnReading(session)}
                       >
-                        Reader read it without help
+                        your child read it without help
                       </option>
                       <option value="supported_reading">
-                        Reader read it with word or sound help
+                        your child read it with word or sound help
                       </option>
                       <option value="listening">
                         An adult read the sentence aloud
@@ -945,8 +967,8 @@ export default function App() {
                       <div className="sound-script">
                         <p>{exercise.question.acceptable}</p>
                         <small>
-                          Keep this guidance out of Your view. If he sees or
-                          hears the answer, mark the response as helped.
+                          Keep this guidance out of your child’s view. If he
+                          sees or hears the answer, mark the response as helped.
                         </small>
                       </div>
                     )}
@@ -960,16 +982,16 @@ export default function App() {
                 )}
                 {exercise.phase === "independent" && (
                   <p>
-                    Ask Reader to read the word aloud. Record his first response
-                    before revealing sounds or a blending model. If you gave any
-                    prompt, mark that below.
+                    Ask your child to read the word aloud. Record his first
+                    response before revealing sounds or a blending model. If you
+                    gave any prompt, mark that below.
                   </p>
                 )}
                 {exercise.phase === "guided" && (
                   <p>
                     Point to each letter and model its sound if needed. Sweep
-                    from left to right, connecting the sounds. Ask Reader to say
-                    the whole word.
+                    from left to right, connecting the sounds. Ask your child to
+                    say the whole word.
                   </p>
                 )}
                 {exercise.phase === "demo" && (
@@ -984,8 +1006,8 @@ export default function App() {
                         )
                         .join(" → ")}
                       . Then slide under the word, keeping continuous sounds
-                      connected. Say “{exercise.target}.” Invite Reader to join
-                      you.
+                      connected. Say “{exercise.target}.” Invite your child to
+                      join you.
                     </p>
                     <p className="notice">
                       Use “Show the blend” or slide along the track while you
@@ -1117,8 +1139,8 @@ export default function App() {
                                 : first.error
                                   ? corrections[first.error]
                                   : exercise.phase === "sound"
-                                    ? "Model this clean letter sound. Invite Reader to repeat it, then try once more."
-                                    : "Model each sound, connect them from left to right, and say the whole word. Then invite Reader to try again."}
+                                    ? "Model this clean letter sound. Invite your child to repeat it, then try once more."
+                                    : "Model each sound, connect them from left to right, and say the whole word. Then invite your child to try again."}
                         </p>
                         {exercise.phase === "oral" && (
                           <div className="sound-script">
@@ -1243,8 +1265,13 @@ export default function App() {
                 recording.
               </p>
               <button className="button text-button" onClick={exportProgress}>
-                Download progress
+                Download current player
               </button>
+              {onExportAll && (
+                <button className="button secondary" onClick={onExportAll}>
+                  Download all players
+                </button>
+              )}
               {protectedData && (
                 <button
                   className="button text-button"
@@ -1297,10 +1324,11 @@ export default function App() {
               }
             }}
           >
-            <h2 id="reset-title">Reset Your local progress?</h2>
+            <h2 id="reset-title">Reset this player’s local progress?</h2>
             <p id="reset-description">
-              This removes all sessions and observations from this browser.
-              Download progress first if you want to keep a copy.
+              {protectedData
+                ? "This replaces unreadable saved data, which may contain other players. Download the original saved data first if you want to keep a copy."
+                : "This removes this player’s sessions, school words, observations, and game progress. Other players are unchanged. Download current player first if you want to keep a copy."}
             </p>
             <div className="dialog-actions">
               <button

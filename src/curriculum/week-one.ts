@@ -14,7 +14,7 @@ const missions = [
     build: "am",
     sentence: "Sam sat.",
     introduction:
-      "Welcome to wrestling camp, Reader! Pick a teammate. Today we will help our team get ready, one little sound at a time.",
+      "Welcome to wrestling camp, teammate! Pick a teammate. Today we will help our team get ready, one little sound at a time.",
   },
   {
     title: "Get the wrestling mat ready",

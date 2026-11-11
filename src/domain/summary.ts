@@ -94,7 +94,7 @@ export function summarize(s: Session) {
     if (row.total && row.independent < row.total)
       recommendations.push(
         phase === "segment"
-          ? "Say a short word together, then model one counter for each sound. Listen to the sounds Reader says; a counter total alone does not show segmentation."
+          ? "Say a short word together, then model one counter for each sound. Listen to the sounds your child says; a counter total alone does not show segmentation."
           : "Practice saying a word, separating its sounds, and choosing a letter for each sound. Read it back together, then try writing it on paper.",
       );
   }
@@ -107,7 +107,7 @@ export function summarize(s: Session) {
     );
   if (stats("meaning").total)
     recommendations.push(
-      "Talk about who is in the sentence and what happened. Keep answers after an adult read-aloud separate from answers after Your own reading; accept a short spoken answer or an action that shows the meaning.",
+      "Talk about who is in the sentence and what happened. Keep answers after an adult read-aloud separate from answers after your child’s own reading; accept a short spoken answer or an action that shows the meaning.",
     );
   const errors = Object.entries(errorLabels)
     .map(([key, label]) => ({

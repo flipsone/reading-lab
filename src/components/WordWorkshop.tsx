@@ -58,9 +58,13 @@ export default function WordWorkshop({
                 key={letter}
                 className="build-letter"
                 aria-label={`Add letter ${letter}`}
-                disabled={work.letters.length === 8}
+                disabled={work.letters.length + letter.length > 20}
                 onClick={() =>
-                  onChange({ ...work, letters: work.letters + letter })
+                  onChange({
+                    ...work,
+                    letters: work.letters + letter,
+                    tiles: [...(work.tiles ?? [...work.letters]), letter],
+                  })
                 }
               >
                 {letter}
@@ -71,7 +75,13 @@ export default function WordWorkshop({
             className="button text-button"
             disabled={!work.letters}
             onClick={() =>
-              onChange({ ...work, letters: work.letters.slice(0, -1) })
+              onChange({
+                ...work,
+                letters: (work.tiles ?? [...work.letters])
+                  .slice(0, -1)
+                  .join(""),
+                tiles: (work.tiles ?? [...work.letters]).slice(0, -1),
+              })
             }
           >
             Remove last letter

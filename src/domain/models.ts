@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { schoolWordSchema } from "./school-words";
 import { gameRoundSchema } from "./game-models";
 
 export const phaseSchema = z.enum([
@@ -52,7 +53,7 @@ const audioSchema = z.object({
   license: z.string().min(1),
 });
 export const soundSchema = z.object({
-  grapheme: z.string().regex(/^[a-z]$/),
+  grapheme: z.string().regex(/^[a-z]{1,2}$/),
   phoneme: z.string().min(1),
   cue: z.string().min(1),
   continuous: z.boolean(),
@@ -81,18 +82,37 @@ export const lessonSchema = z
     version: z.string().min(1),
     title: z.string().min(1),
     mode: z.enum(["observation", "practice"]).default("observation"),
+    contentVersion: z.literal(2).optional(),
+    wordUnits: z
+      .record(z.string(), z.array(z.string().regex(/^[a-z]{1,2}$/)).min(1))
+      .optional(),
+    prerequisiteSounds: z.array(z.string()).optional(),
+    newSound: z.string().optional(),
+    preparationNotes: z.array(z.string()).optional(),
+    story: z
+      .object({ text: z.string(), question: z.string(), answer: z.string() })
+      .optional(),
     mission: z
       .object({
-        number: z.number().int().min(1).max(5),
+        number: z.number().int().min(1).max(30),
         introduction: z.string().min(1),
-        theme: z.enum(["wrestling", "team", "soccer", "football"]),
+        theme: z.enum([
+          "wrestling",
+          "team",
+          "soccer",
+          "football",
+          "building",
+          "dinosaur",
+          "ocean",
+          "space",
+        ]),
         focusWords: z.array(z.string()).length(2),
       })
       .optional(),
     skills: z.array(z.string()).min(1),
     sounds: z.array(soundSchema).min(1),
     exercises: z.array(exerciseSchema).min(1),
-    sentenceWords: z.array(z.string().regex(/^[A-Za-z]{2,3}$/)).optional(),
+    sentenceWords: z.array(z.string().regex(/^[A-Za-z]{1,20}$/)).optional(),
     completion: z.object({
       requireAllFirstAttempts: z.boolean(),
       requireExplicitModel: z.boolean(),
@@ -101,6 +121,9 @@ export const lessonSchema = z
   .superRefine((lesson, ctx) => {
     const fail = (message: string) => ctx.addIssue({ code: "custom", message });
     const practice = lesson.mode === "practice";
+    const modern = lesson.contentVersion === 2;
+    if (modern && (!practice || !lesson.wordUnits))
+      fail("Modern content requires practice mode and explicit word units");
     if (practice) {
       if (
         !lesson.mission ||
@@ -178,7 +201,13 @@ export const lessonSchema = z
         );
       last = next;
       if (e.phase === "sentence" || e.phase === "meaning") {
-        if (!/^[A-Z][a-z]{1,2}(?: [a-z]{2,3}){1,5}\.$/.test(e.target))
+        if (
+          !(
+            modern
+              ? /^[A-Z][a-z]*(?: [a-z]+){1,11}\.$/
+              : /^[A-Z][a-z]{1,2}(?: [a-z]{2,3}){1,5}\.$/
+          ).test(e.target)
+        )
           fail(`Invalid controlled sentence in ${e.id}`);
         const words = e.target.replace(/\.$/, "").split(" ");
         if (words.some((word) => !lesson.sentenceWords?.includes(word)))
@@ -201,18 +230,79 @@ export const lessonSchema = z
       }
       if (!/^[a-z]+$/.test(e.target) || e.question)
         fail(`Invalid word activity in ${e.id}`);
-      if ([...e.target].some((c) => !graphemes.includes(c)))
+      if (
+        (modern
+          ? e.phase === "sound"
+            ? [e.target]
+            : (lesson.wordUnits?.[e.target] ?? [])
+          : [...e.target]
+        ).some((c) => !graphemes.includes(c))
+      )
         fail(`Untaught grapheme in ${e.id}`);
       if (
         e.phase === "sound"
-          ? e.target.length !== 1
-          : e.target.length < 2 || e.target.length > 3
+          ? modern
+            ? !graphemes.includes(e.target)
+            : e.target.length !== 1
+          : e.target.length < 2 || e.target.length > (modern ? 20 : 3)
       )
         fail(`Invalid target length in ${e.id}`);
     }
     for (const word of lesson.sentenceWords ?? [])
-      if ([...word.toLowerCase()].some((c) => !graphemes.includes(c)))
+      if (
+        !modern &&
+        [...word.toLowerCase()].some((c) => !graphemes.includes(c))
+      )
         fail(`Untaught grapheme in sentence preparation: ${word}`);
+    if (
+      !modern &&
+      (graphemes.some((g) => g.length !== 1) ||
+        (lesson.mission?.number ?? 1) > 5 ||
+        lesson.story ||
+        lesson.wordUnits)
+    )
+      fail("Legacy content must retain its original sound and mission rules");
+    if (modern) {
+      for (const [word, units] of Object.entries(lesson.wordUnits ?? {})) {
+        if (
+          units.join("") !== word ||
+          units.some((u) => !graphemes.includes(u))
+        )
+          fail(`Invalid explicit units: ${word}`);
+      }
+      for (const e of lesson.exercises.filter(
+        (e) => !["sound", "sentence", "meaning"].includes(e.phase),
+      )) {
+        if (!lesson.wordUnits?.[e.target])
+          fail(`Missing word units: ${e.target}`);
+      }
+      for (const word of lesson.sentenceWords ?? []) {
+        if (
+          !lesson.wordUnits?.[word.toLowerCase()] &&
+          !lesson.preparationNotes?.some((n) =>
+            n.startsWith(word.toLowerCase() + ":"),
+          )
+        )
+          fail(`Missing sentence preparation: ${word}`);
+      }
+      if (lesson.story) {
+        const sentences = lesson.story.text.match(/[^.]+\./g) ?? [];
+        if (
+          sentences.length < 2 ||
+          sentences.length > 3 ||
+          sentences.join("").trim() !== lesson.story.text.trim()
+        )
+          fail("A story needs two or three complete sentences");
+        for (const word of lesson.story.text.match(/[A-Za-z]+/g) ?? []) {
+          if (
+            !lesson.sentenceWords?.some(
+              (w) => w.toLowerCase() === word.toLowerCase(),
+            )
+          )
+            fail(`Story word not prepared: ${word}`);
+        }
+      }
+    }
     for (const phase of practice ? [] : required)
       if (!lesson.exercises.some((e) => e.phase === phase))
         fail(`Missing ${phase} activity`);
@@ -246,7 +336,8 @@ const assistanceSchema = z.object({
 export type Assistance = z.infer<typeof assistanceSchema>;
 export const wordWorkSchema = z.object({
   counters: z.number().int().min(0).max(8),
-  letters: z.string().regex(/^[a-z]{0,8}$/),
+  letters: z.string().regex(/^[a-z]{0,20}$/),
+  tiles: z.array(z.string().regex(/^[a-z]{1,2}$/)).optional(),
 });
 export type WordWork = z.infer<typeof wordWorkSchema>;
 export const meaningModeSchema = z.enum([
@@ -303,6 +394,13 @@ export const sessionSchema = z
       .default([]),
     teammate: z.enum(["Scout", "Coach", "Buddy"]).optional(),
     sticker: z.enum(["Team star", "Helping hand", "Practice patch"]).optional(),
+    readingContexts: z.record(z.string(), meaningModeSchema).optional(),
+    readingPointers: z
+      .record(z.string(), z.number().int().nonnegative())
+      .optional(),
+    extraChoice: z.enum(["story", "school"]).optional(),
+    schoolVisit: z.string().optional(),
+    extraCompletedAt: z.iso.datetime().optional(),
     comfort: z.enum(["comfortable", "mixed", "stressful"]).optional(),
   })
   .superRefine((s, ctx) => {
@@ -325,10 +423,13 @@ export const sessionSchema = z
       const e = s.lesson.exercises.find((e) => e.id === id);
       if (
         !e ||
+        (s.lesson.contentVersion !== 2 && work.letters.length > 8) ||
         !["segment", "encoding"].includes(e.phase) ||
-        [...work.letters].some(
-          (c) => !s.lesson.sounds.some((sound) => sound.grapheme === c),
-        ) ||
+        (s.lesson.contentVersion === 2
+          ? (work.tiles ?? [...work.letters])
+          : [...work.letters]
+        ).some((c) => !s.lesson.sounds.some((sound) => sound.grapheme === c)) ||
+        (work.tiles !== undefined && work.tiles.join("") !== work.letters) ||
         (e.phase === "segment" && work.letters.length > 0)
       )
         fail("Word work does not match the activity or taught sounds");
@@ -394,6 +495,8 @@ export const progressSchema = z
   .object({
     schemaVersion: z.literal(2),
     learner: learnerSchema,
+    avatar: z.enum(["🚀", "🦖", "⚽", "🐙", "🛠️", "⭐"]).optional(),
+    schoolWords: z.array(schoolWordSchema).default([]),
     sessions: z.array(sessionSchema),
     activeId: z.string().nullable(),
     gameRounds: z.array(gameRoundSchema).default([]),
@@ -406,6 +509,8 @@ export const progressSchema = z
     const fail = (message: string) => ctx.addIssue({ code: "custom", message });
     if (new Set(p.gameRounds.map((g) => g.id)).size !== p.gameRounds.length)
       fail("Duplicate game rounds");
+    if (new Set(p.schoolWords.map((w) => w.word)).size !== p.schoolWords.length)
+      fail("Duplicate school words");
     const earned = p.gameRounds.filter((g) => g.authorization === "earned");
     if (new Set(earned.map((g) => g.sessionId)).size !== earned.length)
       fail("Only one earned round per session");
@@ -418,6 +523,12 @@ export const progressSchema = z
         !earned.some((e) => e.sessionId === g.sessionId)
       )
         fail("Extra rounds require an earned round first");
+      if (
+        g.schoolEvidence?.some(
+          (e) => !p.schoolWords.some((w) => w.id === e.id && w.word === e.word),
+        )
+      )
+        fail("School word evidence must belong to this player");
       const focus = session?.lesson.mission?.focusWords ?? [];
       const familiar = new Set(
         p.sessions.flatMap((s) =>
@@ -435,7 +546,18 @@ export const progressSchema = z
             .map((e) => e.target),
         ),
       );
-      if (g.eligibleWords.some((w) => !focus.includes(w) && !familiar.has(w)))
+      if (
+        g.eligibleWords.some(
+          (w) =>
+            !focus.includes(w) &&
+            !familiar.has(w) &&
+            !g.schoolEvidence?.some(
+              (e) =>
+                e.word === w &&
+                (e.familiarity === "reported" || e.introducedAt),
+            ),
+        )
+      )
         fail("Game contains an unfamiliar word");
     }
     if (p.activeGameId && !p.gameRounds.some((g) => g.id === p.activeGameId))

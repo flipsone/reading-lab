@@ -1,18 +1,30 @@
-# Reading Team
+# Reading Adventures
 
-A browser-local reading practice app with five short missions and an optional touchscreen space game.
+**[Open the app](https://flipsone.github.io/reading-lab/)**
 
-Live app: https://flipsone.github.io/reading-lab/
+Thirty short reading missions across six adventure destinations, followed by Space Rescue Blaster. Includes cumulative blending, sentence reading, optional mini-stories, word building, and an adult nearby. The original five missions and observation lesson remain available.
 
-## Use
+## Players and school words
 
-An adult models sounds and blending while the learner controls navigation, help, and breaks. Completing a mission offers Space Rescue Blaster: drag and hold to fly and fire, then match a spoken word while all action pauses. Optional observations and game progress stay in the current browser; there are no accounts, analytics, microphones, or remote learner databases.
+- Choose **Switch player → Parent mode: players** to create or rename players. Each has separate local progress, words, observations, and rewards.
+- In a player's **Parent mode → Words from school**, paste comma- or newline-separated words and review the list. Mark words already familiar only when appropriate; this records a parent report, not an assessment.
+- **Try of and boy** offers reviewed teaching cards. Other words use adult-guided whole-word practice without automatic sound analysis. New words enter game practice only after an adult confirms introduction.
+- Games keep six encounters on the lesson's focus words and prefer eligible school words for the two review encounters. Reading remains untimed, with all arcade action paused.
+- Optional stories or a school-word visit replace extra practice. Skipping an extra never withholds the game.
 
-Local English speech synthesis is optional. When unavailable, an adult supplies the spoken word. Parent mode provides exports, observations, game voice previews, and extra rounds.
+The map suggests a route but allows exploration. Later missions offer preparation for unfamiliar earlier sounds. Participation, adult observations, and game word matching remain separate; none automatically establishes mastery.
 
-## Development
+## Local data and compatibility
 
-Use Node.js 22.12 or newer.
+No accounts, analytics, microphones, or remote learner databases. Names, pasted words, and progress stay in the current browser and origin; there is no device synchronization. Use **Download current player** or **Download all players** for backups.
+
+Storage uses a version 3 household envelope under the existing `reading-lab.progress.v1` key. Versions 1 and 2 migrate in memory, retaining lesson snapshots, observations, and game decks. Previously shared activity stays with the first player; the app cannot assign it retrospectively to individual children. New players start fresh. Unreadable source data remains protected until an explicit reset.
+
+Optional narration uses available local English speech voices. Sounds, blending models, and dictation are adult-voiced. School words default to adult prompting; a parent can preview the local voice and change individual word settings. Missing or failed prompts require an adult script and Ready confirmation.
+
+## Development and validation
+
+Node.js 22.12 or newer:
 
 ```sh
 npm ci
@@ -20,19 +32,22 @@ npm run dev
 npm test
 npm run test:e2e
 npm run build
+npm run format:check
 ```
+
+The browser suite covers desktop and tablet layouts, profile isolation, legacy saves, school-word introduction, frozen game decks, support, touch and keyboard controls, and reduced motion. A device trial with each learner remains useful for comfort and timing.
 
 ## Deployment
 
-Source is on `main`. GitHub Pages publishes the root of `gh-pages`, containing compiled files and `.nojekyll`.
+`main` holds public source. GitHub Pages publishes the root of `gh-pages`, containing generated files and `.nojekyll`.
 
 ```sh
 npm ci
 npm run build:pages
 ```
 
-Publish the contents of `dist-pages/` to `gh-pages`. Changes on `main` alone do not redeploy. The Pages asset base is `/reading-lab/`.
+Publish `dist-pages/` to `gh-pages`. Source commits alone do not redeploy. The asset base is `/reading-lab/`. The public source contains generic learner wording, original supplemental activities, and no private learning notes or learner records.
 
-This public source uses generic learner wording and contains no private learning notes or learner records. Browser-local progress belongs to each device and origin; records from localhost do not transfer automatically to this address.
+The instructional approach is informed by [IES foundational reading guidance](https://ies.ed.gov/ncee/wwc/PracticeGuide/21) and [UFLI guidance on high-frequency words](https://ufli.education.ufl.edu/resources/teaching-resources/instructional-activities/irregular-and-high-frequency-words/). These original activities are supplemental practice, not a complete curriculum or validated assessment.
 
-Original supplemental activities, not a complete reading curriculum or a validated assessment. Code and original content: MIT license.
+Code and original content: MIT license.

@@ -21,6 +21,8 @@ import { speakDirection } from "../services/narration";
 import SpaceFlight from "./SpaceFlight";
 import { AstronautArt, RobotArt, ShipArt } from "./SpaceArt";
 import "./space-game.css";
+import { packs } from "../curriculum/adventures";
+import AdventureArt from "./AdventureArt";
 
 const patches = ["Star pilot", "Robot blaster", "Rescue teammate"] as const;
 export default function SpaceGame({
@@ -41,6 +43,10 @@ export default function SpaceGame({
   const round = progress.gameRounds.find(
     (g) => g.id === progress.activeGameId,
   )!;
+  const pack = packs[(round.pack ?? 1) - 1];
+  const availablePatches = round.pack
+    ? [pack.patch, ...patches.slice(1)]
+    : patches;
   const live = useRef(progress);
   live.current = progress;
   const sounds = useRef<ArcadeSound | null>(null);
@@ -88,7 +94,10 @@ export default function SpaceGame({
     const g = update(waitForPrompt);
     if (g.status !== "active" || g.phase !== "word") return;
     const index = g.encounter;
-    if (live.current.gameSettings.adultPrompts) {
+    if (
+      live.current.gameSettings.adultPrompts ||
+      g.adultPromptWords?.includes(g.deck[index].target)
+    ) {
       setFallback(true);
       return;
     }
@@ -186,7 +195,10 @@ export default function SpaceGame({
     setParentOpen(!parentOpen);
   }
   return (
-    <div className={`space-shell ${reduced ? "space-reduced" : ""}`}>
+    <div
+      data-pack={round.pack ?? 1}
+      className={`space-shell ${reduced ? "space-reduced" : ""}`}
+    >
       <header className="space-header">
         <div>
           <span className="space-eyebrow">YOUR READING TEAM</span>
@@ -214,6 +226,10 @@ export default function SpaceGame({
       )}
       <main className={`space-layout ${parentOpen ? "with-coach" : ""}`}>
         <section className="space-play" aria-label="Space rescue game">
+          <div className="space-setting">
+            <AdventureArt theme={pack.theme} />
+            <strong>{pack.title}</strong>
+          </div>
           <div className="space-hud">
             <span>★ {stats.stars} stars</span>
             <span>Rescued {stats.rescues} / 8</span>
@@ -303,6 +319,7 @@ export default function SpaceGame({
                 if (!live.current.gameSettings.muted)
                   sounds.current?.play(kind);
               }}
+              pack={round.pack ?? 1}
               onPause={() => currentHandlers.current.pause()}
             />
           ) : round.phase === "word" ? (
@@ -424,7 +441,7 @@ export default function SpaceGame({
                 <>
                   <p>Pick a patch for your space mission.</p>
                   <div className="space-patches">
-                    {patches.map((patch, i) => (
+                    {availablePatches.map((patch, i) => (
                       <button
                         className="space-button"
                         aria-pressed={round.patch === patch}
@@ -525,7 +542,7 @@ export default function SpaceGame({
                 <p>
                   Turn the screen toward you. Say the whole word naturally
                   without showing the answer. Ready hides the script and lets
-                  Reader choose.
+                  your child choose.
                 </p>
                 <button
                   className="space-button"
@@ -561,7 +578,7 @@ export default function SpaceGame({
                     setNotice("Showing the word is recorded as support.");
                   }}
                 >
-                  Reader saw the word / I gave a clue
+                  your child saw the word / I gave a clue
                 </button>
               </>
             ) : (

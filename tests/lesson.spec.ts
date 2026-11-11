@@ -104,11 +104,11 @@ test("complete parent-guided lesson persists results and keeps assessment hints 
   await scoreAndNext(page);
   await scoreAndNext(page);
   await page
-    .getByLabel("How did Reader access this sentence?")
+    .getByLabel("How did your child access this sentence?")
     .selectOption("own_reading");
   await scoreAndNext(page);
   await page
-    .getByLabel("How did Reader access this sentence?")
+    .getByLabel("How did your child access this sentence?")
     .selectOption("listening");
   await page
     .getByRole("button", { name: "Independent correct", exact: true })
@@ -131,7 +131,13 @@ test("complete parent-guided lesson persists results and keeps assessment hints 
     page.getByText("1 corrective retry recorded separately."),
   ).toBeVisible();
   const saved = await page.evaluate(() =>
-    JSON.parse(localStorage.getItem("reading-lab.progress.v1")!),
+    ((data) =>
+      data.schemaVersion === 3
+        ? data.profiles.find(
+            (p: { learner: { id: string } }) =>
+              p.learner.id === data.activeProfileId,
+          )
+        : data)(JSON.parse(localStorage.getItem("reading-lab.progress.v1")!)),
   );
   expect(saved.sessions[0].status).toBe("completed");
   expect(
@@ -229,8 +235,15 @@ test("sound review, repetitions, pause and reset are deliberate and preserve evi
   expect(
     await page.evaluate(
       () =>
-        JSON.parse(localStorage.getItem("reading-lab.progress.v1")!).sessions
-          .length,
+        ((data) =>
+          data.schemaVersion === 3
+            ? data.profiles.find(
+                (p: { learner: { id: string } }) =>
+                  p.learner.id === data.activeProfileId,
+              )
+            : data)(
+          JSON.parse(localStorage.getItem("reading-lab.progress.v1")!),
+        ).sessions.length,
     ),
   ).toBe(2);
   await page
@@ -241,8 +254,12 @@ test("sound review, repetitions, pause and reset are deliberate and preserve evi
     .click();
   await expect(page.getByRole("button", { name: "Let’s begin" })).toBeVisible();
   expect(
-    await page.evaluate(() => localStorage.getItem("reading-lab.progress.v1")),
-  ).toBeNull();
+    await page.evaluate(
+      () =>
+        JSON.parse(localStorage.getItem("reading-lab.progress.v1")!).profiles[0]
+          .sessions,
+    ),
+  ).toEqual([]);
 });
 
 test("unreadable saved data is not overwritten and child mode hides parent controls", async ({
@@ -301,7 +318,13 @@ test("LAN tablet contexts without randomUUID can start and persist a lesson", as
     }),
   ).toBeVisible();
   const saved = await page.evaluate(() =>
-    JSON.parse(localStorage.getItem("reading-lab.progress.v1")!),
+    ((data) =>
+      data.schemaVersion === 3
+        ? data.profiles.find(
+            (p: { learner: { id: string } }) =>
+              p.learner.id === data.activeProfileId,
+          )
+        : data)(JSON.parse(localStorage.getItem("reading-lab.progress.v1")!)),
   );
   expect(saved.learner.id).not.toEqual(saved.sessions[0].id);
 });
@@ -411,7 +434,13 @@ test("sound counters and spelling preserve work, conceal dictation, and keep cor
     .getByRole("button", { name: "Retry correct with support", exact: true })
     .click();
   const saved = await page.evaluate(() =>
-    JSON.parse(localStorage.getItem("reading-lab.progress.v1")!),
+    ((data) =>
+      data.schemaVersion === 3
+        ? data.profiles.find(
+            (p: { learner: { id: string } }) =>
+              p.learner.id === data.activeProfileId,
+          )
+        : data)(JSON.parse(localStorage.getItem("reading-lab.progress.v1")!)),
   );
   const spelling = saved.sessions[0].attempts.filter(
     (a: { phase: string }) => a.phase === "encoding",
@@ -493,13 +522,13 @@ test("sentences require preparation and meaning keeps reading and listening sepa
   await expect(page.locator(".sound-script")).toHaveCount(0);
   await page.getByRole("button", { name: "Parent mode", exact: true }).click();
   await page
-    .getByLabel("How did Reader access this sentence?")
+    .getByLabel("How did your child access this sentence?")
     .selectOption("supported_reading");
   await page
     .getByRole("button", { name: "Independent correct", exact: true })
     .click();
   await page
-    .getByLabel("How did Reader access this sentence?")
+    .getByLabel("How did your child access this sentence?")
     .selectOption("listening");
   await page
     .getByRole("button", { name: "Retry correct with support", exact: true })
@@ -514,10 +543,10 @@ test("sentences require preparation and meaning keeps reading and listening sepa
   ).toBeVisible();
   await page.getByRole("button", { name: "Next step", exact: true }).click();
   await expect(
-    page.getByLabel("How did Reader access this sentence?"),
+    page.getByLabel("How did your child access this sentence?"),
   ).toHaveValue("");
   await page
-    .getByLabel("How did Reader access this sentence?")
+    .getByLabel("How did your child access this sentence?")
     .selectOption("listening");
   await page.setViewportSize({ width: 375, height: 812 });
   expect(
@@ -542,7 +571,13 @@ test("sentences require preparation and meaning keeps reading and listening sepa
     page.getByRole("row", { name: /Meaning after own reading/ }),
   ).toHaveCount(0);
   const saved = await page.evaluate(() =>
-    JSON.parse(localStorage.getItem("reading-lab.progress.v1")!),
+    ((data) =>
+      data.schemaVersion === 3
+        ? data.profiles.find(
+            (p: { learner: { id: string } }) =>
+              p.learner.id === data.activeProfileId,
+          )
+        : data)(JSON.parse(localStorage.getItem("reading-lab.progress.v1")!)),
   );
   const responses = saved.sessions[0].attempts.filter(
     (a: { phase: string }) => a.phase === "meaning",

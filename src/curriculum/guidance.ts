@@ -44,7 +44,7 @@ export const prompts: Record<Phase, { title: string; subtitle: string }> = {
 
 export const corrections: Record<ErrorCategory, string> = {
   unknown_sound:
-    "Model the missing letter sound. Invite Reader to say it with you, then try the word again.",
+    "Model the missing letter sound. Invite your child to say it with you, then try the word again.",
   incorrect_sound:
     "Point to the letter and model its sound clearly. Say the sound together before blending.",
   blending:
@@ -62,5 +62,5 @@ export const corrections: Record<ErrorCategory, string> = {
   letter_choice:
     "Say the word and separate its sounds. Match each sound to its letter from left to right, then read the word back together.",
   meaning:
-    "Return to the sentence and talk about who it names and what happened. Model an answer, then invite Reader to tell or show the meaning.",
+    "Return to the sentence and talk about who it names and what happened. Model an answer, then invite your child to tell or show the meaning.",
 };

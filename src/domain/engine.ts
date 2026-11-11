@@ -19,6 +19,7 @@ export function newProgress(): Progress {
     schemaVersion: 2,
     learner: { id: createId(), displayName: "Reader", createdAt: now() },
     sessions: [],
+    schoolWords: [],
     activeId: null,
     gameRounds: [],
     activeGameId: null,
@@ -89,9 +90,13 @@ export function updateWordWork(s: Session, work: WordWork): Session {
   const checked = wordWorkSchema.parse(work);
   if (
     (e.phase === "segment" && checked.letters.length > 0) ||
-    [...checked.letters].some(
-      (c) => !s.lesson.sounds.some((sound) => sound.grapheme === c),
-    )
+    (s.lesson.contentVersion !== 2 && checked.letters.length > 8) ||
+    (checked.tiles !== undefined &&
+      checked.tiles.join("") !== checked.letters) ||
+    (s.lesson.contentVersion === 2
+      ? (checked.tiles ?? [...checked.letters])
+      : [...checked.letters]
+    ).some((c) => !s.lesson.sounds.some((sound) => sound.grapheme === c))
   )
     throw new Error("Use only the letters taught in this lesson.");
   return { ...s, wordWork: { ...s.wordWork, [e.id]: checked } };
@@ -137,7 +142,7 @@ export function recordAttempt(
     throw new Error("Prepare the names, capitals, and period before reading.");
   if (e.phase === "meaning" && result !== "skipped" && !meaningMode)
     throw new Error(
-      "Choose how Reader accessed the sentence before recording meaning.",
+      "Choose how your child accessed the sentence before recording meaning.",
     );
   if (
     e.phase === "meaning" &&

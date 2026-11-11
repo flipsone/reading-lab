@@ -3,6 +3,7 @@ import { createFlight, stepFlight } from "../domain/flight";
 import { RobotArt, ShipArt } from "./SpaceArt";
 
 export default function SpaceFlight({
+  pack = 1,
   elapsed,
   stars,
   reduced,
@@ -10,6 +11,7 @@ export default function SpaceFlight({
   onSound,
   onPause,
 }: {
+  pack?: number;
   elapsed: number;
   stars: number;
   reduced: boolean;
@@ -101,10 +103,64 @@ export default function SpaceFlight({
             <circle cx="64" cy="55" r="1" fill="#7895bd" />
           </pattern>
         </defs>
-        <rect width="600" height="400" rx="20" fill="#11213f" />
+        <rect
+          width="600"
+          height="400"
+          rx="20"
+          fill={
+            ["#11213f", "#283443", "#163c37", "#103c57", "#263c32", "#251943"][
+              pack - 1
+            ]
+          }
+        />
         <rect width="600" height="400" fill="url(#space-stars)" />
-        <circle cx="530" cy="74" r="36" fill="#344773" />
+        <circle
+          cx="530"
+          cy="74"
+          r="36"
+          fill={
+            ["#344773", "#c28a48", "#63a570", "#4da5b5", "#82a75e", "#a97dc4"][
+              pack - 1
+            ]
+          }
+        />
         <path d="m476 85 111-25" stroke="#65739b" strokeWidth="9" />
+        {pack === 2 && (
+          <path
+            d="M0 360h55v-35h60v35h55v-50h50v50h380v40H0Z"
+            fill="#6e5944"
+            opacity=".4"
+          />
+        )}
+        {pack === 3 && (
+          <path
+            d="m0 400 70-120 70 120 80-150 85 150 90-110 95 110Z"
+            fill="#417f60"
+            opacity=".35"
+          />
+        )}
+        {pack === 4 && (
+          <path
+            d="M0 340q50-35 100 0t100 0t100 0t100 0t100 0t100 0v60H0Z"
+            fill="#3998b2"
+            opacity=".3"
+          />
+        )}
+        {pack === 5 && (
+          <ellipse
+            cx="300"
+            cy="380"
+            rx="170"
+            ry="55"
+            fill="none"
+            stroke="#91c285"
+            strokeWidth="6"
+            opacity=".35"
+          />
+        )}
+        {pack === 6 && (
+          <circle cx="75" cy="92" r="44" fill="#7250a0" opacity=".5" />
+        )}
         {frame.robots.map((r) => (
           <g key={r.id} transform={`translate(${r.x * 6} ${r.y * 4})`}>
             <RobotArt />

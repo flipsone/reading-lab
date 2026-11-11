@@ -4,7 +4,15 @@ import type { Progress } from "../src/domain/models";
 const saved = (page: Page) =>
   page.evaluate(
     () =>
-      JSON.parse(localStorage.getItem("reading-lab.progress.v1")!) as Progress,
+      ((data) =>
+        data.schemaVersion === 3
+          ? data.profiles.find(
+              (p: { learner: { id: string } }) =>
+                p.learner.id === data.activeProfileId,
+            )
+          : data)(
+        JSON.parse(localStorage.getItem("reading-lab.progress.v1")!),
+      ) as Progress,
   );
 async function begin(page: Page) {
   await page.goto("/");
@@ -15,7 +23,7 @@ async function next(page: Page, count = 1) {
     await page.getByRole("button", { name: /^Next/ }).click();
 }
 
-test("Reader can complete all five missions without scores and choose a participation sticker", async ({
+test("your child can complete all five missions without scores and choose a participation sticker", async ({
   page,
 }) => {
   await page.goto("/");
@@ -176,7 +184,7 @@ test("sentence preparation and listening context remain explicit in optional obs
     page.getByRole("button", { name: "Correct without help", exact: true }),
   ).toBeDisabled();
   await page
-    .getByLabel("How did Reader access the sentence?")
+    .getByLabel("How did your child access the sentence?")
     .selectOption("listening");
   await page
     .getByRole("button", { name: "Correct without help", exact: true })

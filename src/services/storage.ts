@@ -1,4 +1,5 @@
 import { progressSchema, type Progress } from "../domain/models";
+import { readHousehold } from "./household";
 import { newProgress } from "../domain/engine";
 export const STORAGE_KEY = "reading-lab.progress.v1";
 export function loadProgress(storage: Pick<Storage, "getItem">): {
@@ -9,6 +10,15 @@ export function loadProgress(storage: Pick<Storage, "getItem">): {
     const raw = storage.getItem(STORAGE_KEY);
     if (!raw) return { progress: newProgress(), error: null };
     const decoded = JSON.parse(raw);
+    if (decoded?.schemaVersion === 3) {
+      const { household, error } = readHousehold(storage);
+      return {
+        progress: household.profiles.find(
+          (p) => p.learner.id === household.activeProfileId,
+        )!,
+        error,
+      };
+    }
     // Migrate in memory only. Original bytes survive until the next valid save.
     const migrated =
       decoded?.schemaVersion === 1

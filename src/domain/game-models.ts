@@ -1,6 +1,7 @@
 import { z } from "zod";
+import { schoolWordSchema } from "./school-words";
 
-export const gameWordSchema = z.string().regex(/^[amnsft]{2,3}$/);
+export const gameWordSchema = z.string().regex(/^[a-z]{1,20}$/);
 export const encounterSchema = z.object({
   target: gameWordSchema,
   choices: z.array(gameWordSchema).min(2).max(3),
@@ -22,6 +23,9 @@ export const gameRoundSchema = z
     id: z.string(),
     sessionId: z.string(),
     version: z.literal(1),
+    pack: z.number().int().min(1).max(6).optional(),
+    schoolEvidence: z.array(schoolWordSchema).optional(),
+    adultPromptWords: z.array(gameWordSchema).optional(),
     authorization: z.enum(["earned", "parent"]),
     createdAt: z.iso.datetime(),
     completedAt: z.iso.datetime().nullable(),
@@ -33,7 +37,17 @@ export const gameRoundSchema = z
     flightElapsedMs: z.number().min(0).max(12000),
     promptReady: z.boolean(),
     patch: z
-      .enum(["Star pilot", "Robot blaster", "Rescue teammate"])
+      .enum([
+        "Star pilot",
+        "Robot blaster",
+        "Rescue teammate",
+        "Camp captain",
+        "Builder pilot",
+        "Dino explorer",
+        "Ocean rescuer",
+        "Sports captain",
+        "Galaxy guide",
+      ])
       .optional(),
   })
   .superRefine((r, ctx) => {

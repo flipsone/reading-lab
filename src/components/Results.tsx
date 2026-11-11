@@ -86,10 +86,11 @@ export default function Results({ session }: { session: Session }) {
       </p>
       {session.lesson.exercises.some((e) => e.phase === "meaning") && (
         <p className="fine-print">
-          Meaning rows describe how Reader accessed the sentence. “Independent”
-          means he answered the question without answer cues in that context.
-          Adult read-aloud results describe listening comprehension. Sentence
-          accuracy is recorded separately; no reading-speed score is calculated.
+          Meaning rows describe how your child accessed the sentence.
+          “Independent” means he answered the question without answer cues in
+          that context. Adult read-aloud results describe listening
+          comprehension. Sentence accuracy is recorded separately; no
+          reading-speed score is calculated.
         </p>
       )}
       <h3>What to practice next</h3>

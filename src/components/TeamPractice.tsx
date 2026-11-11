@@ -1,5 +1,11 @@
 import { useEffect, useRef, useState } from "react";
-import type { MeaningMode, Progress, Result, Session } from "../domain/models";
+import type {
+  Lesson,
+  MeaningMode,
+  Progress,
+  Result,
+  Session,
+} from "../domain/models";
 import {
   addHelp,
   advance,
@@ -12,7 +18,7 @@ import {
   startSession,
   updateWordWork,
 } from "../domain/engine";
-import { familiarWords, makeMission, weekOne } from "../curriculum/week-one";
+import { familiarWords, makeMission } from "../curriculum/week-one";
 import { speakDirection, stopNarration } from "../services/narration";
 import BlendBoard from "./BlendBoard";
 import WordWorkshop from "./WordWorkshop";
@@ -27,6 +33,14 @@ import {
   gameSummary,
 } from "../domain/game-engine";
 import "./team-practice.css";
+import {
+  allMissions,
+  packs,
+  missingPrerequisites,
+} from "../curriculum/adventures";
+import { SchoolWords, SchoolVisit } from "./SchoolWords";
+import ConnectedReading from "./ConnectedReading";
+import AdventureArt from "./AdventureArt";
 
 const stations = ["warmup", "blend", "build", "read", "finish"] as const;
 const stationLabels = [
@@ -47,6 +61,7 @@ export default function TeamPractice({
   onLegacy,
   onExport,
   onRawExport,
+  onExportAll,
 }: {
   progress: Progress;
   onChange: (progress: Progress) => void;
@@ -54,9 +69,12 @@ export default function TeamPractice({
   onLegacy: () => void;
   onExport: () => void;
   onRawExport: () => void;
+  onExportAll?: () => void;
 }) {
   const live = useRef(progress);
   live.current = progress;
+  const [packId, setPackId] = useState(1);
+  const [preparing, setPreparing] = useState<Lesson | null>(null);
   const [selectedId, setSelectedId] = useState<string | null>(
     progress.activeId,
   );
@@ -78,13 +96,18 @@ export default function TeamPractice({
     (s) => s.id === selectedId && s.lesson.mode === "practice",
   );
   const exercise = session ? currentExercise(session) : undefined;
+  const introduction =
+    session?.lesson.mission?.introduction.replace(
+      /Welcome to wrestling camp, [^!]+!/,
+      `Welcome to wrestling camp, ${progress.learner.displayName}!`,
+    ) ?? "";
   const active = session?.status === "active";
   const first = session && active ? firstAttempt(session) : undefined;
   const narration = active
     ? (exercise?.direction ?? "")
     : session
       ? "You made time to practice. Pick a sticker for your team!"
-      : "Welcome to your reading team, Reader! Choose a mission. Your grown-up is nearby, and you can ask for help anytime.";
+      : "Welcome to your reading team, teammate! Choose a mission. Your grown-up is nearby, and you can ask for help anytime.";
 
   useEffect(() => {
     stopNarration();
@@ -136,11 +159,23 @@ export default function TeamPractice({
       return false;
     }
   }
-  function begin(number: number) {
+  function begin(number: number, prepared = false) {
     stopNarration();
     setHomeNotice("");
+    if (
+      number > 5 &&
+      !prepared &&
+      missingPrerequisites(allMissions[number - 1], live.current.sessions)
+        .length
+    ) {
+      setPreparing(allMissions[number - 1]);
+      return;
+    }
+    setPreparing(null);
     if (number === 5 && !choosingFinal) {
-      const words = familiarWords(live.current).slice(0, 2);
+      const words = familiarWords(live.current)
+        .filter((w) => /^[amnsft]{2,3}$/.test(w))
+        .slice(0, 2);
       setFinalWords(words);
       setFinalBuild(words[0]);
       setChoosingFinal(true);
@@ -153,7 +188,7 @@ export default function TeamPractice({
             build: finalBuild,
             sentence: finalSentence,
           })
-        : weekOne[number - 1];
+        : allMissions[number - 1];
     const state = live.current;
     const next = startSession(state.learner.id, lesson);
     commit({
@@ -213,8 +248,11 @@ export default function TeamPractice({
     change((s) =>
       advance(
         completePractice(
-          s,
+          s.extraChoice && currentExercise(s).optional
+            ? { ...s, extraCompletedAt: new Date().toISOString() }
+            : s,
           skip ||
+            Boolean(s.extraChoice && currentExercise(s).optional) ||
             (currentExercise(s).phase === "sentence" && !s.sentencePrepared)
             ? "skipped"
             : "practiced",
@@ -239,7 +277,7 @@ export default function TeamPractice({
     setParentMessage(
       retry
         ? "Supported retry saved separately."
-        : "Observation saved. Reader can choose Next.",
+        : "Observation saved. your child can choose Next.",
     );
     if (result === "independent" || result === "assisted") {
       const supported =
@@ -270,12 +308,12 @@ export default function TeamPractice({
     .reverse()
     .find((s) => s.status !== "completed");
   const recommended =
-    weekOne.find(
+    allMissions.find(
       (lesson) =>
         !practiceSessions.some(
           (s) => s.lesson.id === lesson.id && s.status === "completed",
         ),
-    ) ?? weekOne[4];
+    ) ?? allMissions[29];
   const checkpoint = Boolean(
     exercise?.checkpoint ||
     exercise?.phase === "sentence" ||
@@ -333,7 +371,7 @@ export default function TeamPractice({
         >
           <span aria-hidden="true">✦</span>
           <span>
-            Your
+            {progress.learner.displayName}’s
             <br />
             <strong>reading team</strong>
           </span>
@@ -419,45 +457,107 @@ export default function TeamPractice({
                     Play earned space game · Mission {s.lesson.mission!.number}
                   </button>
                 ))}
+              <section aria-label="Adventure destinations" className="pack-map">
+                {packs.map((pack) => (
+                  <button
+                    key={pack.id}
+                    className={`pack-card ${packId === pack.id ? "selected" : ""}`}
+                    aria-pressed={packId === pack.id}
+                    onClick={() => setPackId(pack.id)}
+                  >
+                    <AdventureArt theme={pack.theme} />
+                    <strong>{pack.title}</strong>
+                    <span>
+                      Missions {(pack.id - 1) * 5 + 1}–{pack.id * 5}
+                    </span>
+                  </button>
+                ))}
+              </section>
+              {preparing && (
+                <section
+                  className="team-card preparation-card"
+                  role="region"
+                  aria-label="Grown-up mission preparation"
+                >
+                  <h2>Explore this adventure together</h2>
+                  <p>
+                    Grown-up: we have not recorded practice of these earlier
+                    sounds for this player. This is guidance, not a test.
+                  </p>
+                  {missingPrerequisites(preparing, progress.sessions).map(
+                    (g) => (
+                      <p key={g}>
+                        <strong>{g}</strong> —{" "}
+                        {preparing.sounds.find((s) => s.grapheme === g)?.cue}
+                      </p>
+                    ),
+                  )}
+                  {preparing.newSound && (
+                    <p>
+                      This mission introduces{" "}
+                      <strong>{preparing.newSound}</strong>. Model it when you
+                      reach warm-up.
+                    </p>
+                  )}
+                  <button
+                    className="button primary"
+                    onClick={() => begin(preparing.mission!.number, true)}
+                  >
+                    We can explore together
+                  </button>
+                  <button
+                    className="button secondary"
+                    onClick={() => {
+                      setPreparing(null);
+                      setPackId(1);
+                    }}
+                  >
+                    Visit earlier missions
+                  </button>
+                </section>
+              )}
+              <h2>{packs[packId - 1].title}</h2>
               <section aria-label="Your five missions" className="mission-map">
-                {weekOne.map((lesson) => {
-                  const saved = [...practiceSessions]
-                    .reverse()
-                    .find(
+                {allMissions
+                  .filter((l) => Math.ceil(l.mission!.number / 5) === packId)
+                  .map((lesson) => {
+                    const saved = [...practiceSessions]
+                      .reverse()
+                      .find(
+                        (s) =>
+                          s.lesson.id === lesson.id && s.status !== "completed",
+                      );
+                    const completed = practiceSessions.some(
                       (s) =>
-                        s.lesson.id === lesson.id && s.status !== "completed",
+                        s.lesson.id === lesson.id && s.status === "completed",
                     );
-                  const completed = practiceSessions.some(
-                    (s) =>
-                      s.lesson.id === lesson.id && s.status === "completed",
-                  );
-                  return (
-                    <button
-                      key={lesson.id}
-                      className={`mission-stop ${completed ? "visited" : ""}`}
-                      onClick={() =>
-                        saved ? resume(saved) : begin(lesson.mission!.number)
-                      }
-                    >
-                      <span className="mission-number">
-                        {completed ? "★" : lesson.mission!.number}
-                      </span>
-                      <span>
-                        <small>MISSION {lesson.mission!.number}</small>
-                        <strong>{lesson.title}</strong>
-                        <small>
-                          {saved
-                            ? "Continue your practice"
-                            : completed
-                              ? "Visit again"
-                              : "Explore together"}
-                        </small>
-                        <small>✦ Space game afterward</small>
-                      </span>
-                      <span aria-hidden="true">→</span>
-                    </button>
-                  );
-                })}
+                    return (
+                      <button
+                        key={lesson.id}
+                        className={`mission-stop ${completed ? "visited" : ""}`}
+                        onClick={() =>
+                          saved ? resume(saved) : begin(lesson.mission!.number)
+                        }
+                      >
+                        <span className="mission-number">
+                          {completed ? "★" : lesson.mission!.number}
+                        </span>
+                        <span>
+                          <small>MISSION {lesson.mission!.number}</small>
+                          <strong>{lesson.title}</strong>
+                          <small>
+                            {saved
+                              ? "Continue your practice"
+                              : completed
+                                ? "Visit again"
+                                : "Explore together"}
+                          </small>
+                          <small>✦ Space game afterward</small>
+                        </span>
+                        <span aria-hidden="true">→</span>
+                      </button>
+                    );
+                  })}
               </section>
               {choosingFinal && (
                 <section
@@ -469,23 +569,25 @@ export default function TeamPractice({
                   <h2>Your celebration, your words</h2>
                   <p>Pick two words to practice again.</p>
                   <div className="team-choices">
-                    {familiarWords(progress).map((word) => (
-                      <button
-                        className="button secondary word-choice"
-                        key={word}
-                        aria-pressed={finalWords.includes(word)}
-                        onClick={() => {
-                          const words = finalWords.includes(word)
-                            ? finalWords.filter((w) => w !== word)
-                            : [...finalWords.slice(-1), word];
-                          setFinalWords(words);
-                          if (!words.includes(finalBuild))
-                            setFinalBuild(words[0] ?? "");
-                        }}
-                      >
-                        {word}
-                      </button>
-                    ))}
+                    {familiarWords(progress)
+                      .filter((w) => /^[amnsft]{2,3}$/.test(w))
+                      .map((word) => (
+                        <button
+                          className="button secondary word-choice"
+                          key={word}
+                          aria-pressed={finalWords.includes(word)}
+                          onClick={() => {
+                            const words = finalWords.includes(word)
+                              ? finalWords.filter((w) => w !== word)
+                              : [...finalWords.slice(-1), word];
+                            setFinalWords(words);
+                            if (!words.includes(finalBuild))
+                              setFinalBuild(words[0] ?? "");
+                          }}
+                        >
+                          {word}
+                        </button>
+                      ))}
                   </div>
                   <label>
                     Build this word{" "}
@@ -536,9 +638,7 @@ export default function TeamPractice({
                 {session.teammate && session.cursor === 0 && (
                   <button
                     className="button text-button"
-                    onClick={() =>
-                      readDirection(session.lesson.mission!.introduction)
-                    }
+                    onClick={() => readDirection(introduction)}
                   >
                     ♫ Hear our mission
                   </button>
@@ -575,12 +675,10 @@ export default function TeamPractice({
                           </button>
                         ))}
                       </div>
-                      <p>{session.lesson.mission!.introduction}</p>
+                      <p>{introduction}</p>
                       <button
                         className="button text-button"
-                        onClick={() =>
-                          readDirection(session.lesson.mission!.introduction)
-                        }
+                        onClick={() => readDirection(introduction)}
                       >
                         ♫ Hear our mission
                       </button>
@@ -603,9 +701,81 @@ export default function TeamPractice({
                   </p>
                 )}
                 {exercise.optional && (
-                  <p className="optional-note">One more word? You choose.</p>
+                  <p className="optional-note">
+                    A little extra? You can also finish proudly.
+                  </p>
                 )}
-                {exercise.optional && !helpOpen ? (
+                {exercise.optional &&
+                (session.lesson.story ||
+                  progress.schoolWords.some((w) => !w.archived)) ? (
+                  <div className="extra-practice">
+                    <div className="team-choices">
+                      {session.lesson.story && (
+                        <button
+                          className="button secondary"
+                          aria-pressed={session.extraChoice === "story"}
+                          onClick={() => {
+                            change((s) => ({ ...s, extraChoice: "story" }));
+                            setHelpOpen(true);
+                          }}
+                        >
+                          Read a little story
+                        </button>
+                      )}
+                      {progress.schoolWords.some((w) => !w.archived) && (
+                        <button
+                          className="button secondary"
+                          aria-pressed={session.extraChoice === "school"}
+                          onClick={() => {
+                            change((s) => ({ ...s, extraChoice: "school" }));
+                            setHelpOpen(true);
+                          }}
+                        >
+                          Visit a school word
+                        </button>
+                      )}
+                    </div>
+                    {session.extraChoice === "story" &&
+                      session.lesson.story && (
+                        <>
+                          <ConnectedReading
+                            text={session.lesson.story.text}
+                            context={session.readingContexts?.story}
+                            pointer={session.readingPointers?.story}
+                            onContext={(m) =>
+                              change((s) => ({
+                                ...s,
+                                readingContexts: {
+                                  ...s.readingContexts,
+                                  story: m,
+                                },
+                              }))
+                            }
+                            onPointer={(p) =>
+                              change((s) => ({
+                                ...s,
+                                readingPointers: {
+                                  ...s.readingPointers,
+                                  story: p,
+                                },
+                              }))
+                            }
+                          />
+                          <p>
+                            {session.lesson.story.question} Tell or show your
+                            answer. Your grown-up can help.
+                          </p>
+                        </>
+                      )}
+                    {session.extraChoice === "school" && (
+                      <SchoolVisit
+                        progress={progress}
+                        session={session}
+                        onChange={commit}
+                      />
+                    )}
+                  </div>
+                ) : exercise.optional && !helpOpen ? (
                   <button
                     className="button secondary large"
                     onClick={() => setHelpOpen(true)}
@@ -631,9 +801,14 @@ export default function TeamPractice({
                     !session.sentencePrepared ? (
                       <>
                         <h2>Meet the words together</h2>
-                        <p className="prep-words">Sam · Nan · sat</p>
+                        <p className="prep-words">
+                          {session.lesson.sentenceWords?.join(" · ")}
+                        </p>
+                        {session.lesson.contentVersion === 2 && (
+                          <p className="sentence-text">{exercise.target}</p>
+                        )}
                         <p>
-                          <strong>S s · N n</strong>
+                          <strong>Match capital and lowercase letters</strong>
                           <br />A capital starts the sentence. A period ends it.
                         </p>
                         <p>
@@ -644,7 +819,29 @@ export default function TeamPractice({
                       </>
                     ) : (
                       <>
-                        <p className="sentence-text">{exercise.target}</p>
+                        <ConnectedReading
+                          text={exercise.target}
+                          context={session.readingContexts?.sentence}
+                          pointer={session.readingPointers?.sentence}
+                          onContext={(m) =>
+                            change((s) => ({
+                              ...s,
+                              readingContexts: {
+                                ...s.readingContexts,
+                                sentence: m,
+                              },
+                            }))
+                          }
+                          onPointer={(p) =>
+                            change((s) => ({
+                              ...s,
+                              readingPointers: {
+                                ...s.readingPointers,
+                                sentence: p,
+                              },
+                            }))
+                          }
+                        />
                         {exercise.phase === "meaning" && (
                           <p>
                             Your grown-up will ask a question. Tell or show what
@@ -658,6 +855,7 @@ export default function TeamPractice({
                   <BlendBoard
                     key={`${session.id}-${exercise.id}-${boardKey}`}
                     target={exercise.target}
+                    units={session.lesson.wordUnits?.[exercise.target]}
                     sounds={session.lesson.sounds}
                     allowed
                     single={exercise.phase === "sound"}
@@ -811,8 +1009,8 @@ export default function TeamPractice({
             <h2>Your nearby coaching spot</h2>
             <p>
               Model clean sounds and connected blending. Hold m, n, s, f; keep t
-              brief, without “uh.” There is no need to ask twice if Reader feels
-              pressure. Model, join in, and move on.
+              brief, without “uh.” There is no need to ask twice if your child
+              feels pressure. Model, join in, and move on.
             </p>
             {session && active && exercise && (
               <>
@@ -845,8 +1043,8 @@ export default function TeamPractice({
                       <div className="parent-script">
                         <strong>{exercise.target}</strong>
                         <p>
-                          Say the word naturally. Then help Reader separate its
-                          sounds. A counter total alone is not evidence of
+                          Say the word naturally. Then help your child separate
+                          its sounds. A counter total alone is not evidence of
                           segmentation.
                         </p>
                       </div>
@@ -856,10 +1054,14 @@ export default function TeamPractice({
                 {exercise.phase === "sentence" && !session.sentencePrepared && (
                   <>
                     <p>
-                      Teach Sam and Nan as names, practice sat and its meaning,
-                      match S/s and N/n, and explain the period. Model the words
-                      and invite Reader to join in.
+                      Prepare these words:{" "}
+                      {session.lesson.sentenceWords?.join(", ")}. Match capitals
+                      to lowercase letters and explain the period. Model each
+                      word and invite your child to join in.
                     </p>
+                    {session.lesson.preparationNotes?.map((note) => (
+                      <p key={note}>{note}</p>
+                    ))}
                     <button
                       className="button primary"
                       onClick={() => change(prepareSentences)}
@@ -876,7 +1078,7 @@ export default function TeamPractice({
                       enough.
                     </p>
                     <label>
-                      How did Reader access the sentence?
+                      How did your child access the sentence?
                       <select
                         value={meaningMode}
                         onChange={(e) =>
@@ -888,10 +1090,10 @@ export default function TeamPractice({
                           value="own_reading"
                           disabled={!canUseOwnReading(session)}
                         >
-                          Reader read without help
+                          your child read without help
                         </option>
                         <option value="supported_reading">
-                          Reader read with help
+                          your child read with help
                         </option>
                         <option value="listening">Adult read aloud</option>
                       </select>
@@ -1011,7 +1213,11 @@ export default function TeamPractice({
                 </select>
               </label>
             )}
-            <h3>This week’s practice</h3>
+            <SchoolWords progress={progress} onChange={commit} />
+            {session?.extraChoice === "story" && session.lesson.story && (
+              <p>Story answer guidance: {session.lesson.story.answer}</p>
+            )}
+            <h3>This player’s practice</h3>
             <p>
               Participation and observed reading are separate. Repetition and
               support are expected; these observations do not establish mastery.
@@ -1082,6 +1288,17 @@ export default function TeamPractice({
                           : {a.result}
                         </p>
                       ))}
+                    {Object.entries(s.readingContexts ?? {}).map(
+                      ([kind, context]) => (
+                        <p key={kind}>
+                          {kind}: selected {context.replaceAll("_", " ")}{" "}
+                          (practice context, not an observation).
+                        </p>
+                      ),
+                    )}
+                    {s.schoolVisit && (
+                      <p>Visited a school word with support available.</p>
+                    )}
                     <p>
                       Comfort: {s.comfort ?? "not noted"}
                       {s.sticker ? ` · ${s.sticker}` : ""}
@@ -1139,8 +1356,13 @@ export default function TeamPractice({
               modeling or stop early. There is no automatic difficulty increase.
             </p>
             <button className="button secondary" onClick={onExport}>
-              Download progress
+              Download current player
             </button>
+            {onExportAll && (
+              <button className="button secondary" onClick={onExportAll}>
+                Download all players
+              </button>
+            )}
             <button
               className="button text-button"
               onClick={() => {

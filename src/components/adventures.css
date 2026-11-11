@@ -1,0 +1,176 @@
+.player-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  max-width: 1200px;
+  margin: auto;
+  padding: 0.6rem 1rem;
+  background: #e8f0df;
+  color: #234839;
+}
+.player-picker {
+  max-width: 850px;
+  margin: 2rem auto;
+  padding: 2rem;
+}
+.player-grid,
+.pack-map {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 1rem;
+  margin: 1.5rem 0;
+}
+.player-choice,
+.pack-card {
+  border: 3px solid #c5d6c3;
+  border-radius: 22px;
+  background: #fffdf3;
+  min-height: 100px;
+  padding: 1rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+  color: #234839;
+  font: inherit;
+  cursor: pointer;
+}
+.player-choice > span {
+  font-size: 2.6rem;
+}
+.pack-card.selected {
+  border-color: #28776b;
+  box-shadow: 0 0 0 3px #deeee6;
+}
+.pack-card strong {
+  font-size: 1.1rem;
+}
+.adventure-art {
+  width: 100%;
+  max-width: 220px;
+  display: block;
+}
+.school-manager {
+  border-top: 2px solid #d4dfcc;
+  margin-top: 1.5rem;
+  padding-top: 1rem;
+}
+.school-manager label,
+.player-picker label {
+  display: block;
+  margin: 1rem 0;
+}
+.school-manager textarea,
+.player-picker input {
+  display: block;
+  max-width: 100%;
+  width: 100%;
+  padding: 0.75rem;
+  border: 2px solid #91ad9e;
+  border-radius: 8px;
+  font: inherit;
+}
+.school-entry {
+  padding: 1rem 0;
+  border-bottom: 1px solid #c7d6ca;
+  overflow-wrap: anywhere;
+}
+.school-entry strong {
+  font-size: 1.2rem;
+}
+.school-manager button {
+  margin: 0.2rem;
+}
+.pointed-word {
+  background: #ffe397;
+  border-radius: 0.3rem;
+  text-decoration: underline;
+  text-underline-offset: 0.25em;
+}
+.word-units {
+  display: flex;
+  gap: 0.6rem;
+  justify-content: center;
+  font-size: 2rem;
+}
+.word-units span {
+  border-bottom: 4px solid #4d8274;
+  padding: 0.5rem;
+}
+.extra-practice {
+  padding-top: 1rem;
+}
+.preparation-card {
+  border: 3px solid #e4b454;
+}
+.space-shell[data-pack="2"] {
+  --space-bg: #202c38;
+  --space-panel: #394357;
+  --space-gold: #ffd183;
+}
+.space-shell[data-pack="3"] {
+  --space-bg: #142f32;
+  --space-panel: #24534d;
+  --space-gold: #cae788;
+}
+.space-shell[data-pack="4"] {
+  --space-bg: #102e4d;
+  --space-panel: #184c68;
+  --space-gold: #80e5e9;
+}
+.space-shell[data-pack="5"] {
+  --space-bg: #233b33;
+  --space-panel: #33584a;
+  --space-gold: #f8d77a;
+}
+.space-shell[data-pack="6"] {
+  --space-bg: #211c47;
+  --space-panel: #3b2f60;
+  --space-gold: #e0b5ff;
+}
+.space-setting {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  color: inherit;
+}
+.space-setting .adventure-art {
+  max-width: 110px;
+  height: 55px;
+}
+.space-word {
+  overflow-wrap: anywhere;
+}
+@media (max-width: 600px) {
+  .pack-map {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.6rem;
+  }
+  .pack-card {
+    padding: 0.5rem;
+  }
+  .player-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+  .player-picker {
+    margin: 0.5rem;
+    padding: 1rem;
+  }
+  .player-bar {
+    font-size: 0.95rem;
+  }
+}
+.space-shell[data-pack] {
+  background: var(--space-bg, #0a162c);
+}
+.space-shell[data-pack] .space-card {
+  background: var(--space-panel, #142644);
+}
+.space-shell[data-pack] .word-target {
+  overflow-wrap: anywhere;
+  min-height: 80px;
+  font-size: clamp(24px, 4vw, 42px);
+  white-space: normal;
+}

@@ -4,7 +4,15 @@ import type { Progress } from "../src/domain/models";
 const saved = (page: Page) =>
   page.evaluate(
     () =>
-      JSON.parse(localStorage.getItem("reading-lab.progress.v1")!) as Progress,
+      ((data) =>
+        data.schemaVersion === 3
+          ? data.profiles.find(
+              (p: { learner: { id: string } }) =>
+                p.learner.id === data.activeProfileId,
+            )
+          : data)(
+        JSON.parse(localStorage.getItem("reading-lab.progress.v1")!),
+      ) as Progress,
   );
 async function voice(page: Page, available = true) {
   await page.addInitScript((available) => {
