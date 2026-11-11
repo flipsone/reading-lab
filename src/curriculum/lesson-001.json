@@ -1,0 +1,211 @@
+{
+  "id": "lesson-001",
+  "version": "0.3.0",
+  "title": "Blending first words",
+  "skills": [
+    "letter_sound_mapping",
+    "phonemic_blending",
+    "vc_decoding",
+    "cvc_decoding",
+    "phonemic_segmentation",
+    "vc_encoding",
+    "cvc_encoding",
+    "controlled_sentence_reading",
+    "literal_sentence_meaning"
+  ],
+  "sounds": [
+    {
+      "grapheme": "a",
+      "phoneme": "/ă/",
+      "cue": "Short a, as in apple. Keep the vowel clear and open.",
+      "continuous": true
+    },
+    {
+      "grapheme": "m",
+      "phoneme": "/m/",
+      "cue": "Close your lips and hum mmm. Keep the sound flowing; no added uh.",
+      "continuous": true
+    },
+    {
+      "grapheme": "n",
+      "phoneme": "/n/",
+      "cue": "Tongue behind the upper teeth; hold nnn gently. No added uh.",
+      "continuous": true
+    },
+    {
+      "grapheme": "s",
+      "phoneme": "/s/",
+      "cue": "Let air flow smoothly: sss. No added uh.",
+      "continuous": true
+    },
+    {
+      "grapheme": "f",
+      "phoneme": "/f/",
+      "cue": "Upper teeth gently touch the lower lip; let air flow: fff. No added uh.",
+      "continuous": true
+    },
+    {
+      "grapheme": "t",
+      "phoneme": "/t/",
+      "cue": "Use a brief, crisp /t/. Do not stretch it or say tuh.",
+      "continuous": false
+    }
+  ],
+  "exercises": [
+    {
+      "id": "sound-a",
+      "phase": "sound",
+      "target": "a"
+    },
+    {
+      "id": "sound-m",
+      "phase": "sound",
+      "target": "m"
+    },
+    {
+      "id": "sound-n",
+      "phase": "sound",
+      "target": "n"
+    },
+    {
+      "id": "sound-s",
+      "phase": "sound",
+      "target": "s"
+    },
+    {
+      "id": "sound-f",
+      "phase": "sound",
+      "target": "f"
+    },
+    {
+      "id": "sound-t",
+      "phase": "sound",
+      "target": "t"
+    },
+    {
+      "id": "oral-am",
+      "phase": "oral",
+      "target": "am"
+    },
+    {
+      "id": "oral-man",
+      "phase": "oral",
+      "target": "man"
+    },
+    {
+      "id": "oral-sat",
+      "phase": "oral",
+      "target": "sat"
+    },
+    {
+      "id": "demo-man",
+      "phase": "demo",
+      "target": "man"
+    },
+    {
+      "id": "guided-am",
+      "phase": "guided",
+      "target": "am"
+    },
+    {
+      "id": "guided-an",
+      "phase": "guided",
+      "target": "an"
+    },
+    {
+      "id": "guided-man",
+      "phase": "guided",
+      "target": "man"
+    },
+    {
+      "id": "guided-fan",
+      "phase": "guided",
+      "target": "fan"
+    },
+    {
+      "id": "independent-mat",
+      "phase": "independent",
+      "target": "mat"
+    },
+    {
+      "id": "independent-sat",
+      "phase": "independent",
+      "target": "sat"
+    },
+    {
+      "id": "independent-fan",
+      "phase": "independent",
+      "target": "fan"
+    },
+    {
+      "id": "independent-man",
+      "phase": "independent",
+      "target": "man"
+    },
+    {
+      "id": "segment-am",
+      "phase": "segment",
+      "target": "am"
+    },
+    {
+      "id": "segment-man",
+      "phase": "segment",
+      "target": "man"
+    },
+    {
+      "id": "segment-sat",
+      "phase": "segment",
+      "target": "sat"
+    },
+    {
+      "id": "encoding-am",
+      "phase": "encoding",
+      "target": "am"
+    },
+    {
+      "id": "encoding-mat",
+      "phase": "encoding",
+      "target": "mat"
+    },
+    {
+      "id": "encoding-fan",
+      "phase": "encoding",
+      "target": "fan"
+    },
+    {
+      "id": "sentence-sam",
+      "phase": "sentence",
+      "target": "Sam sat."
+    },
+    {
+      "id": "sentence-nan",
+      "phase": "sentence",
+      "target": "Nan sat."
+    },
+    {
+      "id": "meaning-sam",
+      "phase": "meaning",
+      "target": "Sam sat.",
+      "question": {
+        "readingId": "sentence-sam",
+        "prompt": "Who sat?",
+        "acceptable": "Sam. A short answer is enough; a full sentence is not required."
+      }
+    },
+    {
+      "id": "meaning-nan",
+      "phase": "meaning",
+      "target": "Nan sat.",
+      "question": {
+        "readingId": "sentence-nan",
+        "prompt": "What did Nan do?",
+        "acceptable": "Sat, sat down, or a sitting action that shows the meaning."
+      }
+    }
+  ],
+  "completion": {
+    "requireAllFirstAttempts": true,
+    "requireExplicitModel": true
+  },
+  "sentenceWords": ["Sam", "Nan", "sat"]
+}

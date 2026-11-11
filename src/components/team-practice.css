@@ -1,0 +1,482 @@
+.team-shell {
+  min-height: 100vh;
+  background: #f7f4e9;
+  color: #293e35;
+}
+.team-header {
+  max-width: 1320px;
+  margin: auto;
+  padding: 22px 32px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+  border-bottom: 1px solid #d9dfce;
+}
+.team-brand {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  border: 0;
+  background: transparent;
+  text-align: left;
+  line-height: 1.2;
+  font-size: 18px;
+}
+.team-brand > span:first-child {
+  display: grid;
+  place-items: center;
+  width: 48px;
+  height: 48px;
+  border-radius: 16px;
+  background: #42634b;
+  color: #f6d47c;
+  font-size: 35px;
+}
+.team-brand strong {
+  font-size: 24px;
+}
+.team-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 28px;
+  max-width: 1180px;
+  padding: 32px;
+  margin: auto;
+}
+.team-layout.parent-visible {
+  max-width: 1440px;
+  grid-template-columns: minmax(0, 1fr) 340px;
+}
+.team-child {
+  min-width: 0;
+}
+.team-welcome {
+  display: grid;
+  grid-template-columns: 1.1fr 1fr;
+  gap: 16px;
+  align-items: center;
+  padding: 16px 0 28px;
+}
+.team-welcome h1 {
+  font-size: clamp(36px, 5vw, 62px);
+  margin: 14px 0;
+}
+.team-welcome p {
+  font-size: 21px;
+}
+.team-welcome .team-small {
+  font-size: 15px;
+  margin: 16px 0 0;
+  color: #556550;
+}
+.team-art {
+  width: 100%;
+  max-width: 410px;
+  display: block;
+  margin: auto;
+}
+.team-art.small {
+  max-width: 180px;
+}
+.team-shell .button {
+  min-height: 48px;
+  border-radius: 14px;
+  white-space: normal;
+}
+.team-shell .primary {
+  background: #42634b;
+}
+.team-shell .secondary {
+  background: #fffcf3;
+  border: 1px solid #bac9ad;
+}
+.team-shell .button[aria-pressed="true"] {
+  background: #e0ebcf;
+  outline: 3px solid #42634b;
+  outline-offset: 1px;
+}
+.mission-map {
+  display: grid;
+  gap: 14px;
+  margin: 25px 0;
+}
+.mission-stop {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  text-align: left;
+  background: #fffdf6;
+  border: 1px solid #d4dcc8;
+  border-radius: 22px;
+  padding: 18px 22px;
+  box-shadow: 0 4px 0 #e6e7d9;
+}
+.mission-stop:hover {
+  border-color: #42634b;
+  background: #f1f5e8;
+}
+.mission-stop > span:nth-child(2) {
+  flex: 1;
+  display: grid;
+  gap: 5px;
+}
+.mission-stop strong {
+  font-size: 21px;
+  line-height: 1.3;
+}
+.mission-stop small {
+  font-size: 13px;
+  color: #53654d;
+}
+.mission-number {
+  display: grid;
+  place-items: center;
+  min-width: 54px;
+  height: 54px;
+  border-radius: 50%;
+  background: #e9eedb;
+  font-size: 27px;
+  font-weight: 750;
+}
+.mission-stop.visited .mission-number {
+  background: #f6d47c;
+}
+.mission-heading {
+  display: flex;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-bottom: 20px;
+}
+.mission-heading > span:last-child {
+  color: #53654d;
+  font-size: 14px;
+}
+.team-stations {
+  display: flex;
+  padding: 0;
+  margin: 0 0 24px;
+  list-style: none;
+  gap: 8px;
+}
+.team-stations li {
+  flex: 1;
+  text-align: center;
+  padding: 10px 4px;
+  font-size: 13px;
+  border-bottom: 3px solid #dce1ce;
+}
+.team-stations li span {
+  display: block;
+  font-size: 19px;
+  margin-bottom: 4px;
+}
+.team-stations li[aria-current="step"] {
+  color: #294936;
+  font-weight: 750;
+  border-color: #42634b;
+  background: #e6ecd8;
+  border-radius: 12px 12px 0 0;
+}
+.team-card {
+  padding: 24px;
+  background: #fffdf7;
+  border: 1px solid #d4dcc8;
+  border-radius: 26px;
+  text-align: center;
+  box-shadow: 0 5px 0 #e6e7d9;
+}
+.team-card h1 {
+  font-size: 30px;
+}
+.practice-direction {
+  font-size: 19px;
+  max-width: 620px;
+  margin: 0 auto 18px;
+}
+.team-shell .tiles.single .letter-tile {
+  width: 110px;
+  height: 125px;
+}
+.team-shell .tiles.single .letter-tile > span:first-child {
+  font-size: 90px;
+}
+.team-shell .single + .board-status {
+  margin: 16px 0;
+}
+.mission-heading .button {
+  min-height: 44px;
+  padding: 4px 10px;
+}
+.mission-intro {
+  display: flex;
+  gap: 24px;
+  align-items: center;
+  padding-bottom: 24px;
+  margin-bottom: 24px;
+  border-bottom: 1px solid #dce1ce;
+  text-align: left;
+}
+.mission-intro > div {
+  flex: 1;
+}
+.mission-intro p {
+  margin: 16px 0 0;
+}
+.team-choices {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  justify-content: center;
+  padding: 8px 0;
+}
+.look-routine {
+  margin: 26px 0 0;
+  font-weight: 650;
+  color: #42634b;
+}
+.look-routine span {
+  margin: 0 7px;
+  color: #a36d20;
+}
+.team-help,
+.team-encouragement {
+  border-radius: 14px;
+  padding: 14px;
+  background: #edf2e1;
+  margin: 18px 0 0;
+  line-height: 1.65;
+}
+.team-encouragement {
+  color: #34513a;
+}
+.practice-controls {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 22px;
+}
+.practice-dock {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  position: sticky;
+  bottom: 8px;
+  z-index: 5;
+  margin-top: 18px;
+  padding: 10px;
+  border: 1px solid #d4dcc8;
+  border-radius: 20px;
+  background: #f7f4e9;
+  box-shadow: 0 3px 14px #293e3514;
+}
+.practice-dock .practice-controls {
+  flex: 1;
+  margin-top: 0;
+}
+.practice-dock .break-button {
+  margin: 0;
+  min-height: 44px;
+}
+.practice-controls .button {
+  flex: 1 1 130px;
+}
+.practice-controls .button.primary {
+  flex-grow: 1.5;
+}
+.practice-controls .button span {
+  margin-right: 6px;
+}
+.break-button {
+  display: block;
+  margin: 14px auto;
+}
+.team-footer {
+  text-align: center;
+  padding: 30px 0 8px;
+  font-size: 14px;
+  color: #5c6953;
+}
+.team-parent {
+  border-radius: 22px;
+  padding: 22px;
+  background: #ebeddf;
+  align-self: start;
+  min-width: 0;
+}
+.team-parent p {
+  font-size: 14px;
+}
+.team-parent .button {
+  margin: 5px 0;
+  width: 100%;
+}
+.team-parent h3 {
+  margin-top: 26px;
+}
+.team-shell label {
+  display: block;
+  margin: 16px 0;
+  line-height: 1.5;
+  text-align: left;
+}
+.team-shell select {
+  width: 100%;
+  min-height: 48px;
+  margin-top: 7px;
+  border: 1px solid #a8b69e;
+  border-radius: 10px;
+  padding: 10px;
+  background: #fffdf7;
+  color: inherit;
+}
+.team-shell .prompt-check {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.parent-script {
+  background: #fffdf7;
+  border: 1px dashed #718562;
+  padding: 16px;
+  border-radius: 12px;
+}
+.parent-script strong {
+  font-size: 24px;
+}
+.week-record {
+  padding: 12px 0;
+  border-bottom: 1px solid #bdc8ae;
+}
+.week-record p {
+  margin-bottom: 8px;
+}
+.team-finish > .team-art {
+  max-width: 280px;
+}
+.team-finish > .button {
+  margin: 14px 6px 0;
+}
+.stickers {
+  margin: 22px 0;
+}
+.stickers button {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  min-width: 130px;
+}
+.stickers button span {
+  color: #997019;
+  font-size: 40px;
+}
+.prep-words {
+  font-size: 34px;
+  letter-spacing: 0.06em;
+}
+.practice-sentence {
+  margin-top: 28px;
+}
+.voice-fallback {
+  margin-top: 18px;
+  padding: 12px;
+  border: 1px solid #c4cbb8;
+  border-radius: 12px;
+}
+.word-choice {
+  font-size: 28px;
+}
+.optional-note {
+  margin-top: 24px;
+}
+.team-shell .storage-warning {
+  max-width: 1120px;
+  margin: 16px auto;
+}
+@media (max-width: 1000px) {
+  .team-layout.parent-visible {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .team-parent {
+    width: 100%;
+  }
+}
+@media (max-width: 600px) {
+  .practice-dock {
+    flex-direction: column;
+  }
+  .practice-dock .practice-controls {
+    width: 100%;
+  }
+  .team-header {
+    padding: 16px;
+  }
+  .team-brand strong {
+    font-size: 19px;
+  }
+  .team-brand > span:first-child {
+    width: 38px;
+    height: 42px;
+  }
+  .team-layout {
+    padding: 20px 14px;
+  }
+  .team-welcome {
+    grid-template-columns: 1fr;
+    text-align: center;
+  }
+  .team-welcome .team-art {
+    max-width: 230px;
+  }
+  .team-welcome h1 {
+    font-size: 38px;
+  }
+  .team-card {
+    padding: 20px 14px;
+  }
+  .mission-stop {
+    gap: 12px;
+    padding: 16px;
+  }
+  .mission-stop strong {
+    font-size: 18px;
+  }
+  .mission-number {
+    min-width: 44px;
+    height: 44px;
+  }
+  .mission-intro {
+    flex-direction: column;
+    text-align: center;
+  }
+  .team-stations li {
+    font-size: 11px;
+  }
+  .team-stations {
+    gap: 3px;
+  }
+  .practice-direction {
+    font-size: 17px;
+  }
+  .team-shell .letter-tile {
+    width: 66px;
+    height: 88px;
+    font-size: 48px;
+  }
+  .team-shell .tiles {
+    gap: 10px;
+  }
+  .team-shell .sentence-text {
+    font-size: 40px;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .team-shell *,
+  .team-shell *::before,
+  .team-shell *::after {
+    animation: none !important;
+    transition: none !important;
+    scroll-behavior: auto !important;
+  }
+}
