@@ -131,6 +131,13 @@ export default function TeamPractice({
     }
   }, [choosingFinal]);
 
+  useEffect(() => {
+    if (!preparing) return;
+    const card = document.getElementById("mission-preparation");
+    card?.focus();
+    card?.scrollIntoView({ block: "start", behavior: "instant" });
+  }, [preparing]);
+
   function commit(next: Progress) {
     live.current = next;
     onChange(next);
@@ -477,6 +484,8 @@ export default function TeamPractice({
                 <section
                   className="team-card preparation-card"
                   role="region"
+                  id="mission-preparation"
+                  tabIndex={-1}
                   aria-label="Grown-up mission preparation"
                 >
                   <h2>Explore this adventure together</h2>

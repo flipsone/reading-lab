@@ -19,6 +19,9 @@ async function mission(page: Page, pack: string, number: number) {
   await page
     .getByRole("button", { name: new RegExp(`^${number} MISSION ${number} `) })
     .click();
+  await expect(
+    page.getByRole("region", { name: "Grown-up mission preparation" }),
+  ).toBeFocused();
   await page.getByRole("button", { name: "We can explore together" }).click();
 }
 
